@@ -60,20 +60,127 @@
 
 const int SSN = 10;                   // Digital pin 10 is active low slave select signal
 
-void setup() {
+char buff;                            // Current character from user input
+char act = 0;                         // Character corresponding to one of the valid command actions 'p','e', or 'd'
+char adr = 0;                         // Character corresponding to one of the valid channel numbers '0','1','2','3', or '4'
+char data3 = 0;                       // Character corresponding to the most significant hex digit of the data value
+char data2 = 0;                       // Character corresponding to the next most significant hex digit of the data value
+char data1 = 0;                       // Character corresponding to the next most significant hex digit of the data value
+char data0 = 0;                       // Character corresponding to the least significant hex digit of the data value
+int fsm = 0;                          // State variable
+
+
+void setup() 
+{
   SPI.begin();                        // Initialize SPI - sets SCK, MOSI, and SSN to outputs. Pulls SCK and MOSI low, and SS high.
+  Serial.begin(9600);                 // Initialize serial port with 9600 Baud Rate
+}
+
+void loop() 
+{
+  if(Serial.available() > 0)         // If the buffer contains a byte,   
+    buff = Serial.read();            //   save that byte to buff
+  
+  switch(fsm)
+  {
+    case 0:    // Check first byte for p, e, or d
+      if(buff == 'p' || buff == 'e' || buff == 'd')
+      {
+        act = buff;                 // If so, save that command character to act
+        fsm = 1;                    // Check next byte
+      }
+      else                          
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 1:    // Check second byte for space character                        
+      if(buff == ' ')
+        fsm = 2;                    // If so, proceed to check third byte for channel number
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 2:    // Check third byte for channel number
+      if(buff == '0' || buff == '1' || buff == '2' || buff == '3' || buff == '4')
+      {
+        adr = buff;                 // If so, save that channel number to adr
+        fsm = 3;                    // Then check next byte
+      }
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 3:    // Check fourth byte for space character                         
+      if(buff == ' ')
+        fsm = 4;                    // If so, proceed to check third byte for channel number
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 4:    // Check fifth byte for valid character between '0'-'f'
+      if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
+      {
+        data3 = buff;               // If so, save that character to data3
+        fsm = 5;                    // check next byte
+      }
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 5:    // Check sixth byte for valid character between '0'-'f'
+      if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
+      {
+        data2 = buff;               // If so, save that character to data2
+        fsm = 6;                    // check next byte
+      }
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 6:    // Check seventh byte for valid character between '0'-'f'
+      if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
+      {
+        data1 = buff;               // If so, save that character to data1
+        fsm = 7;                    // check next byte
+      }
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 7:    // Check eighth byte for valid character between '0'-'f'
+      if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
+      {
+        data0 = buff;               // If so, save that character to data0
+        fsm = 8;                    // check next byte
+      }
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 8:    // Check ninth byte for either NL or CR
+      if(buff == '\n' || buff == '\r')
+        fsm = 9;                    // Valid command has been found, proceed to execute
+      else
+        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+      break;
+
+    case 9:    // Execute command
+
+      
+    default: 
+      fsm = 0;
+    break;
+  }
 }
 
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
-}
-
-// PRE: channel = 0x30-0x34, value = 0x0000-0xffff
-void WriteDAC(int channel, int value) {   // Protocol for sending data from Arduino to DAC over SPI
-  digitalWrite(SSN, LOW);                 // 1. Drive SSN low to signal DAC transmission start
-  SPI.transfer(channel);                  // 2. Send in the channel number via SPI
-  SPI.transfer(value);                    // 3. Send in the value via SPI
-  digitalWrite(SSN, HIGH);                // 4. Drive SSN high to signal DAC transmission stop
+// PRE: channel = 0x30-0x34, value = 0x0000-0xffff, SSN = HIGH
+// Protocol for sending data from Arduino to DAC over SPI, Used only for 'd' commands
+void WriteDAC(int channel, int valueMSB, int valueLSB)     
+{   
+  digitalWrite(SSN, LOW);           // 1. Drive SSN low to signal DAC transmission start
+  SPI.transfer(channel);            // 2. Send in the channel number via SPI
+  SPI.transfer(valueMSB);           // 3. Send in the most significant byte of value via SPI
+  SPI.transfer(valueLSB);           // 4. Send in the least significant byte of value via SPI
+  digitalWrite(SSN, HIGH);          // 5. Drive SSN high to signal DAC transmission stop
 }
