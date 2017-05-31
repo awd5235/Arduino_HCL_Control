@@ -58,7 +58,26 @@
 
 #include <SPI.h>                      // include the SPI library:
 
-const int SSN = 10;                   // Digital pin 10 is active low slave select signal
+// Digital pin initializations
+const int HKN = 2;                    // House keeping enable
+const int EN0 = 3;                    // Channel 0 enable
+const int EN1 = 4;                    // Channel 1 enable
+const int EN2 = 5;                    // Channel 2 enable
+const int EN3 = 6;                    // Channel 3 enable
+const int EN4 = 7;                    // Channel 4 enable
+const int VDD_EN = 8;                 // 24V enable
+const int SSN = 10;                   // active low slave select signal
+const int MOSI = 11;                  // Master out slave in data line
+const int SCK = 13;                   // System clock signal
+
+// Analog pint initializations
+const int VCTRL0 = A7;                // Channel 0 control voltage
+const int VCTRL1 = A6;                // Channel 1 control voltage
+const int VCTRL2 = A5;                // Channel 2 control voltage
+const int VCTRL3 = A4;                // Channel 3 control voltage
+const int VCTRL4 = A3;                // Channel 4 control voltage
+const int TEMP = A2;                  // Temperature monitoring pin for housekeeping
+const int VDD_MON = A1;               // 24V monitoring for power supply
 
 char buff;                            // Current character from user input
 char act = 0;                         // Character corresponding to one of the valid command actions 'p','e', or 'd'
@@ -164,14 +183,32 @@ void loop()
         fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
       break;
 
-    case 9:    // Execute command
-
+    case 9:    // Syntactically correct command, proceed to interpret and execute
+      if(act == 'p' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0')
+      {
+        if(data0 == '0')
+        {
+          digitalWrite(VDD_EN,LOW);
+          fsm = 0;
+        }
+        else if(data0 == '1')
+        {
+          digitalWrite(VDD_EN,HIGH);
+          fsm = 0;
+        }
+      }
+      else if(act == 'e')
+      {
+        
+      }
       
     default: 
       fsm = 0;
     break;
   }
 }
+
+
 
 
 // PRE: channel = 0x30-0x34, value = 0x0000-0xffff, SSN = HIGH
