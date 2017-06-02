@@ -66,9 +66,7 @@ const int EN2 = 5;                    // Channel 2 enable
 const int EN3 = 6;                    // Channel 3 enable
 const int EN4 = 7;                    // Channel 4 enable
 const int VDD_EN = 8;                 // 24V enable
-const int SSN = 10;                   // active low slave select signal
-const int MOSI = 11;                  // Master out slave in data line
-const int SCK = 13;                   // System clock signal
+const int SSN = 10;                   // active low slave select signal for SPI
 
 // Analog pint initializations
 const int VCTRL0 = A7;                // Channel 0 control voltage
@@ -87,6 +85,7 @@ char data2 = 0;                       // Character corresponding to the next mos
 char data1 = 0;                       // Character corresponding to the next most significant hex digit of the data value
 char data0 = 0;                       // Character corresponding to the least significant hex digit of the data value
 int fsm = 0;                          // State variable
+word dacVal = 0;                      // 16-bit value to set dac
 
 
 void setup() 
@@ -97,127 +96,191 @@ void setup()
 
 void loop() 
 {
-  if(Serial.available() > 0)         // If the buffer contains a byte,   
-    buff = Serial.read();            //   save that byte to buff
+  if(Serial.available() > 0)          // If the buffer contains a byte,   
+    buff = Serial.read();             //   save that byte to buff
   
   switch(fsm)
   {
     case 0:    // Check first byte for p, e, or d
       if(buff == 'p' || buff == 'e' || buff == 'd')
       {
-        act = buff;                 // If so, save that command character to act
-        fsm = 1;                    // Check next byte
+        act = buff;                   // If so, save that command character to act
+        fsm = 1;                      // Check next byte
       }
       else                          
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 1:    // Check second byte for space character                        
       if(buff == ' ')
-        fsm = 2;                    // If so, proceed to check third byte for channel number
+        fsm = 2;                      // If so, proceed to check third byte for channel number
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 2:    // Check third byte for channel number
       if(buff == '0' || buff == '1' || buff == '2' || buff == '3' || buff == '4')
       {
-        adr = buff;                 // If so, save that channel number to adr
-        fsm = 3;                    // Then check next byte
+        adr = buff;                   // If so, save that channel number to adr
+        fsm = 3;                      // Then check next byte
       }
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 3:    // Check fourth byte for space character                         
       if(buff == ' ')
-        fsm = 4;                    // If so, proceed to check third byte for channel number
+        fsm = 4;                      // If so, proceed to check third byte for channel number
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 4:    // Check fifth byte for valid character between '0'-'f'
       if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
       {
-        data3 = buff;               // If so, save that character to data3
-        fsm = 5;                    // check next byte
+        data3 = buff;                 // If so, save that character to data3
+        fsm = 5;                      // check next byte
       }
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 5:    // Check sixth byte for valid character between '0'-'f'
       if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
       {
-        data2 = buff;               // If so, save that character to data2
-        fsm = 6;                    // check next byte
+        data2 = buff;                 // If so, save that character to data2
+        fsm = 6;                      // check next byte
       }
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 6:    // Check seventh byte for valid character between '0'-'f'
       if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
       {
-        data1 = buff;               // If so, save that character to data1
-        fsm = 7;                    // check next byte
+        data1 = buff;                 // If so, save that character to data1
+        fsm = 7;                      // check next byte
       }
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 7:    // Check eighth byte for valid character between '0'-'f'
       if((buff > '/' && buff < ':')||(buff > '`' && buff < 'g'))
       {
-        data0 = buff;               // If so, save that character to data0
-        fsm = 8;                    // check next byte
+        data0 = buff;                 // If so, save that character to data0
+        fsm = 8;                      // check next byte
       }
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
+
 
     case 8:    // Check ninth byte for either NL or CR
       if(buff == '\n' || buff == '\r')
-        fsm = 9;                    // Valid command has been found, proceed to execute
+        fsm = 9;                      // Valid command has been found, proceed to execute
       else
-        fsm = 0;                    // Otherwise, invalid command, re-check first byte for valid character
+        fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
       break;
 
-    case 9:    // Syntactically correct command, proceed to interpret and execute
-      if(act == 'p' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0')
+
+    case 9:    // Syntactically correct command, proceed to interpret and execute.
+      if(act == 'p' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0') // 'p' command execution
       {
         if(data0 == '0')
-        {
-          digitalWrite(VDD_EN,LOW);
-          fsm = 0;
-        }
-        else if(data0 == '1')
-        {
-          digitalWrite(VDD_EN,HIGH);
-          fsm = 0;
-        }
-      }
-      else if(act == 'e')
-      {
+          digitalWrite(VDD_EN,LOW);             // Disconnect 24V supply to ALL channels
         
+        else if(data0 == '1')
+          digitalWrite(VDD_EN,HIGH);            // Connect 24V supply to ALL channels       
       }
+      else if(act == 'e' && data3 == '0' && data2 == '0' && data1 == '0')          // 'e' command execution
+      {
+        if(adr == '0' && data0 == '0')
+          digitalWrite(EN0,LOW);                // Disable channel 0 supply
+        
+        else if(adr == '0' && data0 == '1')
+          digitalWrite(EN0,HIGH);               // Enable channel 0 supply
+        
+        else if(adr == '1' && data0 == '0')
+          digitalWrite(EN1,LOW);                // Disable channel 1 supply
+        
+        else if(adr == '1' && data0 == '1')
+          digitalWrite(EN1,HIGH);               // Enable channel 1 supply
+        
+        else if(adr == '2' && data0 == '0')
+          digitalWrite(EN2,LOW);                // Disable channel 2 supply
+        
+        else if(adr == '2' && data0 == '1')
+          digitalWrite(EN2,HIGH);               // Enable channel 2 supply
+        
+        else if(adr == '3' && data0 == '0')
+          digitalWrite(EN3,LOW);                // Disable channel 3 supply
+        
+        else if(adr == '3' && data0 == '1')
+          digitalWrite(EN3,HIGH);               // Enable channel 3 supply
+          
+        else if(adr == '4' && data0 == '0')
+          digitalWrite(EN4,LOW);                // Disable channel 4 supply
+          
+        else if(adr == '4' && data0 == '1')
+          digitalWrite(EN4,HIGH);               // Enable channel 4 supply
+      }
+      else if(act == 'd')                                   // 'd' command execution
+      {
+        dacVal = char2num(data3, data2, data1, data0);      // Convert 4 data chars to single number
+        WriteDAC(adr,dacVal);                               // Write value to DAC at specified address
+      }
+      fsm = 0;               // Restart command parsing
+      break;
+
       
     default: 
-      fsm = 0;
+      fsm = 0;               // Restart command parsing
     break;
   }
 }
 
 
+// Given valid characters data3-0 return a single 16-bit number corresponding to their value
+word char2num(char data3, char data2, char data1, char data0)
+{
+  word num = 0;
 
+  if(data0 > '9')              // Check LSB is a letter 'a'-'f'
+    num = data0 - 51;          // If so, subtract 51 to convert to number 10-15
+  else                         // Otherwise, it is a digit '0'-'9'
+    num = data0 - 30;          // Subtract 30 to convert to number 0-9
 
-// PRE: channel = 0x30-0x34, value = 0x0000-0xffff, SSN = HIGH
+  if(data1 > '9')              // Check next most LSB is a letter 'a'-'f'
+    num += (data1 - 51)*16;    // If so, subtract 51 to convert to number 10-15
+  else                         // Otherwise, it is a digit '0'-'9'
+    num += (data1 - 30)*16;    // Subtract 30 to convert to number 0-9
+
+  if(data2 > '9')              // Check next most LSB is a letter 'a'-'f'
+    num += (data2 - 51)*256;   // If so, subtract 51 to convert to number 10-15
+  else                         // Otherwise, it is a digit '0'-'9'
+    num += (data2 - 30)*256;   // Subtract 30 to convert to number 0-9
+
+  if(data3 > '9')              // Check MSB is a letter 'a'-'f'
+    num += (data3 - 51)*4096;  // If so, subtract 51 to convert to number 10-15
+  else                         // Otherwise, it is a digit '0'-'9'
+    num += (data3 - 30)*4096;  // Subtract 30 to convert to number 0-9
+  
+  return num;
+}
+
 // Protocol for sending data from Arduino to DAC over SPI, Used only for 'd' commands
-void WriteDAC(int channel, int valueMSB, int valueLSB)     
+void WriteDAC(int adr, word dacVal)     
 {   
-  digitalWrite(SSN, LOW);           // 1. Drive SSN low to signal DAC transmission start
-  SPI.transfer(channel);            // 2. Send in the channel number via SPI
-  SPI.transfer(valueMSB);           // 3. Send in the most significant byte of value via SPI
-  SPI.transfer(valueLSB);           // 4. Send in the least significant byte of value via SPI
-  digitalWrite(SSN, HIGH);          // 5. Drive SSN high to signal DAC transmission stop
+  digitalWrite(SSN, LOW);      // 1. Drive SSN low to signal DAC transmission start
+  SPI.transfer(adr);           // 2. Send in the channel number via SPI
+  SPI.transfer16(dacVal);      // 3. Send 16-bit value to set dac to
+  digitalWrite(SSN, HIGH);     // 4. Drive SSN high to signal DAC transmission stop
 }
