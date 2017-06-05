@@ -77,6 +77,7 @@ const int VCTRL4 = A3;                // Channel 4 control voltage
 const int TEMP = A2;                  // Temperature monitoring pin for housekeeping
 const int VDD_MON = A1;               // 24V monitoring for power supply
 
+// Local Variables
 char buff;                            // User input character buffer
 char act = 0;                         // Character corresponding to one of the valid command actions 'p','e', or 'd'
 char adr = 0;                         // Character corresponding to one of the valid channel numbers '0','1','2','3', or '4'
@@ -86,6 +87,8 @@ char data1 = 0;                       // Character corresponding to the next mos
 char data0 = 0;                       // Character corresponding to the least significant hex digit of the data value
 int fsm = 0;                          // State variable
 word dacVal = 0;                      // 16-bit value to set dac
+int dacChan = 0;                      // 4-bit dac command + 4-bit channel number
+
 
 
 void setup() 
@@ -106,11 +109,11 @@ void loop()
   {
     case 0:    // Check first byte for p, e, or d
     {
-      if(buff == 'p' || buff == 'e' || buff == 'd')
+      if(buff == 'p' || buff == 'e' || buff == 'd' || buff == 'v' || buff == 't' || buff == 'a')
       {
         act = buff;                   // If so, save that command character to act
         fsm = 1;                      // Check next byte
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {                          
@@ -126,7 +129,7 @@ void loop()
       if(buff == ' ')
       {
         fsm = 2;                      // If so, proceed to check third byte for channel number
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -143,7 +146,7 @@ void loop()
       {
         adr = buff;                   // If so, save that channel number to adr
         fsm = 3;                      // Then check next byte
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -159,7 +162,7 @@ void loop()
       if(buff == ' ')
       {
         fsm = 4;                      // If so, proceed to check third byte for channel number
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -175,7 +178,7 @@ void loop()
       {
         data3 = buff;                 // If so, save that character to data3
         fsm = 5;                      // check next byte
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -191,7 +194,7 @@ void loop()
       {
         data2 = buff;                 // If so, save that character to data2
         fsm = 6;                      // check next byte
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -208,7 +211,7 @@ void loop()
       {
         data1 = buff;                 // If so, save that character to data1
         fsm = 7;                      // check next byte
-        Serial.println(buff);
+        Serial.print(buff);
       }
       else
       {
@@ -241,7 +244,7 @@ void loop()
       if(buff == '\n' || buff == '\r')
       {
         fsm = 9;                      // Valid command has been found, proceed to execute
-        Serial.println("new line!");
+        //Serial.println("new line!");
       }
       else
       {
@@ -259,91 +262,146 @@ void loop()
         if(data0 == '0')
         {
           digitalWrite(VDD_EN,LOW);             // Disconnect 24V supply to ALL channels
-          Serial.print("Disconnect 24V supply to ALL channels");
+          Serial.println("Disconnect 24V supply to ALL channels");
         }
         
         else if(data0 == '1')
         {
           digitalWrite(VDD_EN,HIGH);            // Connect 24V supply to ALL channels
-          Serial.print("Connect 24V supply to ALL channels");
-        }       
+          Serial.println("Connect 24V supply to ALL channels");
+        }
+
+        else
+          Serial.println("Invalid Command!");   // Occurs if data0 is not 0 or 1
       }
       else if(act == 'e' && data3 == '0' && data2 == '0' && data1 == '0')          // 'e' command execution
       {
         if(adr == '0' && data0 == '0')
         {
           digitalWrite(EN0,LOW);                // Disable channel 0 supply
-          Serial.print("Disable channel 0 supply");
+          Serial.println("Disable channel 0 supply");
         }
         
         else if(adr == '0' && data0 == '1')
         {
           digitalWrite(EN0,HIGH);               // Enable channel 0 supply
-          Serial.print("Enable channel 0 supply");
+          Serial.println("Enable channel 0 supply");
         }
         
         else if(adr == '1' && data0 == '0')
         {
           digitalWrite(EN1,LOW);                // Disable channel 1 supply
-          Serial.print("Disable channel 1 supply");
+          Serial.println("Disable channel 1 supply");
         }
         
         else if(adr == '1' && data0 == '1')
         {
           digitalWrite(EN1,HIGH);               // Enable channel 1 supply
-          Serial.print("Enable channel 1 supply");
+          Serial.println("Enable channel 1 supply");
         }
         
         else if(adr == '2' && data0 == '0')
         {
           digitalWrite(EN2,LOW);                // Disable channel 2 supply
-          Serial.print("Disable channel 2 supply");
+          Serial.println("Disable channel 2 supply");
         }
         
         else if(adr == '2' && data0 == '1')
         {
           digitalWrite(EN2,HIGH);               // Enable channel 2 supply
-          Serial.print("Enable channel 2 supply");
+          Serial.println("Enable channel 2 supply");
         }
         
         else if(adr == '3' && data0 == '0')
         {
           digitalWrite(EN3,LOW);                // Disable channel 3 supply
-          Serial.print("Disable channel 3 supply");
+          Serial.println("Disable channel 3 supply");
         }
         
         else if(adr == '3' && data0 == '1')
         {
           digitalWrite(EN3,HIGH);               // Enable channel 3 supply
-          Serial.print("Enable channel 3 supply");
+          Serial.println("Enable channel 3 supply");
         }
           
         else if(adr == '4' && data0 == '0')
         {
           digitalWrite(EN4,LOW);                // Disable channel 4 supply
-          Serial.print("Disable channel 4 supply");
+          Serial.println("Disable channel 4 supply");
         }
           
         else if(adr == '4' && data0 == '1')
         {
           digitalWrite(EN4,HIGH);               // Enable channel 4 supply
-          Serial.print("Enable channel 4 supply");
+          Serial.println("Enable channel 4 supply");
         }
+
+        else
+          Serial.println("Invalid command!");   // Occurs if adr is not '0'-'4' or if data0 is not '0' or '1'
       }
       else if(act == 'd')                                   // 'd' command execution
       {
-        dacVal = char2num(data3, data2, data1, data0);      // Convert 4 data chars to single number
-        WriteDAC(adr,dacVal);                               // Write value to DAC at specified address
+        dacChan = char2num('0','0','3',adr);                // Determine upper 8-bit to send DAC (4-bit command + 4-bit channel)
+        dacVal = char2num(data3, data2, data1, data0);      // Convert 4 data chars to single 16-bit number
+        WriteDAC(dacChan,dacVal);                           // Write value to DAC at specified address
         Serial.print(dacVal);
-        Serial.print(" written to DAC");
+        Serial.print(" written to DAC channel ");
+        Serial.println(dacChan);
       }
-      fsm = 0;               // Restart command parsing
+      else if(act == 'v' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0' && data0 == '0')   // Read Supply monitor voltage
+      {
+        Serial.print("Vdd = ");
+        Serial.println(analogRead(VDD_MON));
+      }
+      else if(act == 't' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0' && data0 == '0')   // Read Board Temperature
+      {
+        Serial.print("Board Temp = ");
+        Serial.println(analogRead(TEMP));
+      }
+      else if(act == 'a' && data3 == '0' && data2 == '0' && data1 == '0' && data0 == '0')   // Read Control Voltage
+      {
+        if(adr == '0')      // Channel 0 control voltage
+        {
+          Serial.print("Control Voltage 0 = ");
+          Serial.println(analogRead(VCTRL0));
+        } 
+         
+        else if(adr == '1') // Channel 1 control voltage
+        {
+          Serial.print("Control Voltage 1 = ");
+          Serial.println(analogRead(VCTRL1));
+        } 
+         
+        else if(adr == '2') // Channel 2 control voltage
+        {
+          Serial.print("Control Voltage 2 = ");
+          Serial.println(analogRead(VCTRL2));
+        }
+          
+        else if(adr == '3') // Channel 3 control voltage
+        {
+          Serial.print("Control Voltage 3 = ");
+          Serial.println(analogRead(VCTRL3));
+        }
+          
+        else if(adr == '4') // Channel 4 control voltage
+        {
+          Serial.print("Control Voltage 4 = ");
+          Serial.println(analogRead(VCTRL4));
+        }
+
+        else              // Occurs of address is not '0'-'4'
+          Serial.println("Invalid command!"); 
+      }
+      else
+        Serial.println("Invalid command!");     // If all else fails, throw error
+      fsm = 0;            // Restart command parsing
     }
     break;
 
       
     default: 
-      fsm = 0;               // Restart command parsing
+      fsm = 0;            // Restart command parsing
     break;
   }
 }
@@ -378,10 +436,12 @@ word char2num(char data3, char data2, char data1, char data0)
 }
 
 // Protocol for sending data from Arduino to DAC over SPI, Used only for 'd' commands
-void WriteDAC(int adr, word dacVal)     
-{   
-  digitalWrite(SSN, LOW);      // 1. Drive SSN low to signal DAC transmission start
-  SPI.transfer(adr);           // 2. Send in the channel number via SPI
-  SPI.transfer16(dacVal);      // 3. Send 16-bit value to set dac to
-  digitalWrite(SSN, HIGH);     // 4. Drive SSN high to signal DAC transmission stop
+void WriteDAC(int dacChan, word dacVal)     
+{
+  SPI.beginTransaction(SPISettings (10000,MSBFIRST,SPI_MODE0)); // 1. Specify transaction settings: 10kHz clock, send MSB first, active low clock sampled on rising edge
+  digitalWrite(SSN, LOW);                                       // 2. Drive SSN low to signal DAC transmission start
+  SPI.transfer(dacChan);                                        // 3. Send in the command + channel number via SPI
+  SPI.transfer16(dacVal);                                       // 4. Send 16-bit value to set DAC
+  digitalWrite(SSN, HIGH);                                      // 5. Drive SSN high to signal DAC transmission stop
+  SPI.endTransaction();                                         // 6. End transaction
 }
