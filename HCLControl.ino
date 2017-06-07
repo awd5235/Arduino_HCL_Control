@@ -59,7 +59,6 @@
 #include <SPI.h>                      // include the SPI library:
 
 // Digital pin initializations
-const int HKN = 2;                    // House keeping enable
 const int EN0 = 3;                    // Channel 0 enable
 const int EN1 = 4;                    // Channel 1 enable
 const int EN2 = 5;                    // Channel 2 enable
@@ -95,6 +94,27 @@ void setup()
 {
   SPI.begin();                        // Initialize SPI - sets SCK, MOSI, and SSN to outputs. Pulls SCK and MOSI low, and SS high.
   Serial.begin(9600);                 // Initialize serial port with 9600 Baud Rate
+
+  pinMode(EN0,OUTPUT);
+  digitalWrite(EN0,LOW);
+  
+  pinMode(EN1,OUTPUT);
+  digitalWrite(EN1,LOW);
+  
+  pinMode(EN2,OUTPUT);
+  digitalWrite(EN2,LOW);
+  
+  pinMode(EN3,OUTPUT);
+  digitalWrite(EN3,LOW);
+  
+  pinMode(EN4,OUTPUT);
+  digitalWrite(EN4,LOW);
+  
+  pinMode(VDD_EN,OUTPUT);
+  digitalWrite(VDD_EN,LOW);
+  
+  pinMode(SSN,OUTPUT);
+  digitalWrite(SSN,HIGH);
 }
 
 void loop() 
