@@ -7,9 +7,7 @@
     HOLLOW CATHODE LAMP (HCL) CONTROL
       This sketch allows the Arduino Nano to recieve and interpret a fixed length command (8 ASCII bytes) over USB.
       Once interpreted, the commands are used to control the operation of 5 seperate HCL power supplies, each their own channel.
-      The programmable control voltage set by the user, is transferred from the Arduino to a DAC via SPI. Furthermore, when
-      housekeeping mode is enabled, the Arduino will use interrupts to periodically send measurements for Vdd, board temperature,
-      and program voltage over USB to the host computer for monitoring purposes.
+      The programmable control voltage set by the user, is transferred from the Arduino to a DAC via SPI.
     
     Each HCL power supply has 5 lines:
         * Vdd:       +24V comes directly from power supply turn on/off with Arduino pin 11 (Serves as master on/off for ALL HCL supplies).
@@ -29,30 +27,6 @@
         * "v 0 xxxx" = Displays power supply voltage xxxx, usually around 0x01BF for intended +24V operation
         * "t 0 xxxx" = Displays temperature reading xxxx
         * "a n xxxx" = Displays analog control voltage xxxx for channel n
-
-    Arduino Nano Pins used:
-        Enable:
-          * D2 = HKN
-          * D3 = EN0
-          * D4 = EN1
-          * D5 = EN2
-          * D6 = EN3
-          * D7 = EN4
-          * D8 = VDD_EN
-
-        SPI:
-          * D10 = SSN
-          * D11 = MOSI
-          * D13 = SCK
-
-        Analog Voltage Signals:
-          * A7 = VCTRL0
-          * A6 = VCTRL1
-          * A5 = VCTRL2
-          * A4 = VCTRL3
-          * A3 = VCTRL4
-          * A2 = TEMP
-          * A1 = VDD_MON
 */
 
 
@@ -65,6 +39,8 @@ const int EN2 = 5;                    // Channel 2 enable
 const int EN3 = 6;                    // Channel 3 enable
 const int EN4 = 7;                    // Channel 4 enable
 const int VDD_EN = 8;                 // 24V enable
+
+// SPI pin
 const int SSN = 10;                   // active low slave select signal for SPI
 
 // Analog pint initializations
@@ -85,7 +61,7 @@ char data2 = 0;                       // Character corresponding to the next mos
 char data1 = 0;                       // Character corresponding to the next most significant hex digit of the data value
 char data0 = 0;                       // Character corresponding to the least significant hex digit of the data value
 int fsm = 0;                          // State variable
-word dacVal = 0;                      // 16-bit value to set dac
+word dacVal = 65535;                  // 16-bit value to set dac, initialized to 0xffff
 int dacChan = 0;                      // 4-bit dac command + 4-bit channel number
 
 
@@ -95,26 +71,26 @@ void setup()
   SPI.begin();                        // Initialize SPI - sets SCK, MOSI, and SSN to outputs. Pulls SCK and MOSI low, and SS high.
   Serial.begin(9600);                 // Initialize serial port with 9600 Baud Rate
 
-  pinMode(EN0,OUTPUT);
-  digitalWrite(EN0,LOW);
+  pinMode(EN0,OUTPUT);                // Initialize enable for channel 0
+  digitalWrite(EN0,LOW);              // Set low
   
-  pinMode(EN1,OUTPUT);
-  digitalWrite(EN1,LOW);
+  pinMode(EN1,OUTPUT);                // Initialize enable for channel 1
+  digitalWrite(EN1,LOW);              // Set low
   
-  pinMode(EN2,OUTPUT);
-  digitalWrite(EN2,LOW);
+  pinMode(EN2,OUTPUT);                // Initialize enable for channel 2
+  digitalWrite(EN2,LOW);              // Set low
   
-  pinMode(EN3,OUTPUT);
-  digitalWrite(EN3,LOW);
+  pinMode(EN3,OUTPUT);                // Initialize enable for channel 3
+  digitalWrite(EN3,LOW);              // Set low
   
-  pinMode(EN4,OUTPUT);
-  digitalWrite(EN4,LOW);
+  pinMode(EN4,OUTPUT);                // Initialize enable for channel 4  
+  digitalWrite(EN4,LOW);              // Set low
   
-  pinMode(VDD_EN,OUTPUT);
-  digitalWrite(VDD_EN,LOW);
+  pinMode(VDD_EN,OUTPUT);             // Initialize 24V power supply enable
+  digitalWrite(VDD_EN,LOW);           // Set low
   
-  pinMode(SSN,OUTPUT);
-  digitalWrite(SSN,HIGH);
+  pinMode(SSN,OUTPUT);                // Initialize slave select line
+  digitalWrite(SSN,HIGH);             // Set high
 }
 
 void loop() 
@@ -122,7 +98,7 @@ void loop()
   if(fsm != 9)
   {
     while(Serial.available() == 0);    // Do nothing while buffer is NULL, 
-    buff = Serial.read();               // Save input character to buff
+    buff = Serial.read();              // Save input character to buff
   }
   
   switch(fsm)
@@ -410,18 +386,18 @@ void loop()
           Serial.println(analogRead(VCTRL4));
         }
 
-        else              // Occurs of address is not '0'-'4'
+        else                // Occurs of address is not '0'-'4'
           Serial.println("Invalid command!"); 
       }
       else
         Serial.println("Invalid command!");     // If all else fails, throw error
-      fsm = 0;            // Restart command parsing
+      fsm = 0;              // Restart command parsing
     }
     break;
 
       
     default: 
-      fsm = 0;            // Restart command parsing
+      fsm = 0;              // Restart command parsing
     break;
   }
 }
@@ -430,7 +406,7 @@ void loop()
 // Given valid characters data3-0 return a single 16-bit number corresponding to their value
 word char2num(char data3, char data2, char data1, char data0)
 {
-  word num = 0;
+  word num = 65535;            // Initialize to 0xffff
 
   if(data0 > '9')              // Check LSB is a letter 'a'-'f'
     num = data0 - 87;          // If so, subtract 87 to convert to number 10-15
