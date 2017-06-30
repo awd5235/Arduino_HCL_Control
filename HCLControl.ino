@@ -1,4 +1,4 @@
-/*
+ /*
     Adam Dykhouse
     5/23/2017
     Pennsylvania State University
@@ -109,12 +109,12 @@ void loop()
       {
         act = buff;                   // If so, save that command character to act
         fsm = 1;                      // Check next byte
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {                          
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -125,12 +125,12 @@ void loop()
       if(buff == ' ')
       {
         fsm = 2;                      // If so, proceed to check third byte for channel number
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -142,12 +142,12 @@ void loop()
       {
         adr = buff;                   // If so, save that channel number to adr
         fsm = 3;                      // Then check next byte
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -158,12 +158,12 @@ void loop()
       if(buff == ' ')
       {
         fsm = 4;                      // If so, proceed to check third byte for channel number
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -174,12 +174,12 @@ void loop()
       {
         data3 = buff;                 // If so, save that character to data3
         fsm = 5;                      // check next byte
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     break;
 
@@ -190,12 +190,12 @@ void loop()
       {
         data2 = buff;                 // If so, save that character to data2
         fsm = 6;                      // check next byte
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -207,12 +207,12 @@ void loop()
       {
         data1 = buff;                 // If so, save that character to data1
         fsm = 7;                      // check next byte
-        Serial.print(buff);
+        // Serial.print(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -224,12 +224,12 @@ void loop()
       {
         data0 = buff;                 // If so, save that character to data0
         fsm = 8;                      // check next byte
-        Serial.println(buff);
+        // Serial.println(buff);
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -240,12 +240,11 @@ void loop()
       if(buff == '\n' || buff == '\r')
       {
         fsm = 9;                      // Valid command has been found, proceed to execute
-        //Serial.println("new line!");
       }
       else
       {
         fsm = 0;                      // Otherwise, invalid command, re-check first byte for valid character
-        Serial.println("Invalid Command, please try again");
+        // Serial.println("Invalid Command, please try again");
       }
     }
     break;
@@ -258,91 +257,91 @@ void loop()
         if(data0 == '0')
         {
           digitalWrite(VDD_EN,LOW);             // Disconnect 24V supply to ALL channels
-          Serial.println("Disconnect 24V supply to ALL channels");
+          // Serial.println("Disconnect 24V supply to ALL channels");
         }
         
         else if(data0 == '1')
         {
           digitalWrite(VDD_EN,HIGH);            // Connect 24V supply to ALL channels
-          Serial.println("Connect 24V supply to ALL channels");
+          // Serial.println("Connect 24V supply to ALL channels");
         }
 
-        else
-          Serial.println("Invalid Command!");   // Occurs if data0 is not 0 or 1
+        // else
+        //  Serial.println("Invalid Command!");   // Occurs if data0 is not 0 or 1
       }
       else if(act == 'e' && data3 == '0' && data2 == '0' && data1 == '0')          // 'e' command execution
       {
         if(adr == '0' && data0 == '0')
         {
           digitalWrite(EN0,LOW);                // Disable channel 0 supply
-          Serial.println("Disable channel 0 supply");
+          // Serial.println("Disable channel 0 supply");
         }
         
         else if(adr == '0' && data0 == '1')
         {
           digitalWrite(EN0,HIGH);               // Enable channel 0 supply
-          Serial.println("Enable channel 0 supply");
+          // Serial.println("Enable channel 0 supply");
         }
         
         else if(adr == '1' && data0 == '0')
         {
           digitalWrite(EN1,LOW);                // Disable channel 1 supply
-          Serial.println("Disable channel 1 supply");
+          // Serial.println("Disable channel 1 supply");
         }
         
         else if(adr == '1' && data0 == '1')
         {
           digitalWrite(EN1,HIGH);               // Enable channel 1 supply
-          Serial.println("Enable channel 1 supply");
+          // Serial.println("Enable channel 1 supply");
         }
         
         else if(adr == '2' && data0 == '0')
         {
           digitalWrite(EN2,LOW);                // Disable channel 2 supply
-          Serial.println("Disable channel 2 supply");
+          // Serial.println("Disable channel 2 supply");
         }
         
         else if(adr == '2' && data0 == '1')
         {
           digitalWrite(EN2,HIGH);               // Enable channel 2 supply
-          Serial.println("Enable channel 2 supply");
+          // Serial.println("Enable channel 2 supply");
         }
         
         else if(adr == '3' && data0 == '0')
         {
           digitalWrite(EN3,LOW);                // Disable channel 3 supply
-          Serial.println("Disable channel 3 supply");
+          // Serial.println("Disable channel 3 supply");
         }
         
         else if(adr == '3' && data0 == '1')
         {
           digitalWrite(EN3,HIGH);               // Enable channel 3 supply
-          Serial.println("Enable channel 3 supply");
+          // Serial.println("Enable channel 3 supply");
         }
           
         else if(adr == '4' && data0 == '0')
         {
           digitalWrite(EN4,LOW);                // Disable channel 4 supply
-          Serial.println("Disable channel 4 supply");
+          // Serial.println("Disable channel 4 supply");
         }
           
         else if(adr == '4' && data0 == '1')
         {
           digitalWrite(EN4,HIGH);               // Enable channel 4 supply
-          Serial.println("Enable channel 4 supply");
+          // Serial.println("Enable channel 4 supply");
         }
 
-        else
-          Serial.println("Invalid command!");   // Occurs if adr is not '0'-'4' or if data0 is not '0' or '1'
+        // else
+        //  Serial.println("Invalid command!");   // Occurs if adr is not '0'-'4' or if data0 is not '0' or '1'
       }
       else if(act == 'd')                                   // 'd' command execution
       {
         dacChan = char2num('0','0','3',adr);                // Determine upper 8-bit to send DAC (4-bit command + 4-bit channel)
         dacVal = char2num(data3, data2, data1, data0);      // Convert 4 data chars to single 16-bit number
         WriteDAC(dacChan,dacVal);                           // Write value to DAC at specified address
-        Serial.print(dacVal);
-        Serial.print(" written to DAC channel ");
-        Serial.println(dacChan);
+        // Serial.print(dacVal);
+        // Serial.print(" written to DAC channel ");
+        // Serial.println(dacChan);
       }
       else if(act == 'v' && adr == '0' && data3 == '0' && data2 == '0' && data1 == '0' && data0 == '0')   // Read Supply monitor voltage
       {
@@ -386,11 +385,11 @@ void loop()
           Serial.println(analogRead(VCTRL4));
         }
 
-        else                // Occurs of address is not '0'-'4'
-          Serial.println("Invalid command!"); 
+        // else                // Occurs of address is not '0'-'4'
+        //   Serial.println("Invalid command!"); 
       }
-      else
-        Serial.println("Invalid command!");     // If all else fails, throw error
+      // else
+      //   Serial.println("Invalid command!");     // If all else fails, throw error
       fsm = 0;              // Restart command parsing
     }
     break;
