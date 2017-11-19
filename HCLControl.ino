@@ -68,7 +68,7 @@ float temp = 0;                       // Analog board temperature for housekeepi
 float dacVolt = 0;                    // Analog DAC voltage for housekeeping
 
 // Constants
-const float ffff = 65536;             // Constant representing 0xffff
+const float ffff = 65535;             // Constant representing 0xffff
 
 
 void setup() 
@@ -279,61 +279,61 @@ void loop()
         if(adr == '0' && data0 == '0')
         {
           digitalWrite(EN0,LOW);                // Disable channel 0 supply
-          Serial.println("Disable channel 0 supply");
+          Serial.println("Disable Lamp 0");
         }
         
         else if(adr == '0' && data0 == '1')
         {
           digitalWrite(EN0,HIGH);               // Enable channel 0 supply
-          Serial.println("Enable channel 0 supply");
+          Serial.println("Enable Lamp 0");
         }
         
         else if(adr == '1' && data0 == '0')
         {
           digitalWrite(EN1,LOW);                // Disable channel 1 supply
-          Serial.println("Disable channel 1 supply");
+          Serial.println("Disable Lamp 1");
         }
         
         else if(adr == '1' && data0 == '1')
         {
           digitalWrite(EN1,HIGH);               // Enable channel 1 supply
-          Serial.println("Enable channel 1 supply");
+          Serial.println("Enable Lamp 1");
         }
         
         else if(adr == '2' && data0 == '0')
         {
           digitalWrite(EN2,LOW);                // Disable channel 2 supply
-          Serial.println("Disable channel 2 supply");
+          Serial.println("Disable Lamp 2");
         }
         
         else if(adr == '2' && data0 == '1')
         {
           digitalWrite(EN2,HIGH);               // Enable channel 2 supply
-          Serial.println("Enable channel 2 supply");
+          Serial.println("Enable Lamp 2");
         }
         
         else if(adr == '3' && data0 == '0')
         {
           digitalWrite(EN3,LOW);                // Disable channel 3 supply
-          Serial.println("Disable channel 3 supply");
+          Serial.println("Disable Lamp 3");
         }
         
         else if(adr == '3' && data0 == '1')
         {
           digitalWrite(EN3,HIGH);               // Enable channel 3 supply
-          Serial.println("Enable channel 3 supply");
+          Serial.println("Enable Lamp 3");
         }
           
         else if(adr == '4' && data0 == '0')
         {
           digitalWrite(EN4,LOW);                // Disable channel 4 supply
-          Serial.println("Disable channel 4 supply");
+          Serial.println("Disable Lamp 4");
         }
           
         else if(adr == '4' && data0 == '1')
         {
           digitalWrite(EN4,HIGH);               // Enable channel 4 supply
-          Serial.println("Enable channel 4 supply");
+          Serial.println("Enable Lamp 4");
         }
 
         // else
@@ -345,10 +345,10 @@ void loop()
         dacVal = char2num(data3, data2, data1, data0);      // Convert 4 data chars to single 16-bit number
         WriteDAC(dacChan,dacVal);                           // Write value to DAC at specified address
         
-        dacVolt = (dacVal/ffff)*5;                          // Convert dacVal to voltage for display
-        Serial.print("Channel ");
+        dacVolt = 5 - (dacVal/ffff);                          // Convert dacVal to voltage for display
+        Serial.print("Lamp ");
         Serial.print(adr);
-        Serial.print(" set to ");
+        Serial.print(" control voltage set to ");
         Serial.print(dacVolt);
         Serial.println("V");
       }
@@ -357,7 +357,7 @@ void loop()
         vdd = analogRead(VDD_MON);
         vdd = ((vdd*5)/1024)*11;                   // Convert VDD_MON (digital) to analog voltage reading using formula: V_an = ((VDD_MON*5)/1024)*11
                
-        Serial.print("Vdd = ");
+        Serial.print("Supply Voltage = ");
         Serial.print(vdd);                          
         Serial.println("V");
       }
@@ -377,7 +377,7 @@ void loop()
           dacVolt = analogRead(VCTRL0);
           dacVolt = (dacVolt*5)/1024;             // Convert VCTRL0 (digital) to analog voltage using formula: dacVolt = (VCTRL0*5)/1024
           
-          Serial.print("DAC Channel 0 Voltage = ");
+          Serial.print("Lamp 0 Control Voltage = ");
           Serial.print(dacVolt);
           Serial.println("V");
         } 
@@ -387,7 +387,7 @@ void loop()
           dacVolt = analogRead(VCTRL1);
           dacVolt = (dacVolt*5)/1024;             // Convert VCTRL1 (digital) to analog voltage using formula: dacVolt = (VCTRL1*5)/1024
           
-          Serial.print("DAC Channel 1 Voltage = ");
+          Serial.print("Lamp 1 Control Voltage = ");
           Serial.print(dacVolt);
           Serial.println("V");
         } 
@@ -397,7 +397,7 @@ void loop()
           dacVolt = analogRead(VCTRL2);
           dacVolt = (dacVolt*5)/1024;             // Convert VCTRL2 (digital) to analog voltage using formula: dacVolt = (VCTRL2*5)/1024
           
-          Serial.print("DAC Channel 2 Voltage = ");
+          Serial.print("Lamp 2 Control Voltage = ");
           Serial.print(dacVolt);
           Serial.println("V");
         }
@@ -407,7 +407,7 @@ void loop()
           dacVolt = analogRead(VCTRL3);
           dacVolt = (dacVolt*5)/1024;             // Convert VCTRL3 (digital) to analog voltage using formula: dacVolt = (VCTRL3*5)/1024
           
-          Serial.print("DAC Channel 3 Voltage = ");
+          Serial.print("Lamp 3 Control Voltage = ");
           Serial.print(dacVolt);
           Serial.println("V");
         }
@@ -417,7 +417,7 @@ void loop()
           dacVolt = analogRead(VCTRL4);
           dacVolt = (dacVolt*5)/1024;             // Convert VCTRL4 (digital) to analog voltage using formula: dacVolt = (VCTRL4*5)/1024
           
-          Serial.print("DAC Channel 4 Voltage = ");
+          Serial.print("Lamp 4 Control Voltage = ");
           Serial.print(dacVolt);
           Serial.println("V");
         }
